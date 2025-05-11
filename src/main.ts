@@ -6,11 +6,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Aktifkan ValidationPipe secara global
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true, // Hanya izinkan properti yang didefinisikan di DTO
-    forbidNonWhitelisted: true, // Tolak request jika ada properti tak dikenal
-    transform: true, // Otomatis transform payload ke instance DTO
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // Hanya izinkan properti yang didefinisikan di DTO
+      forbidNonWhitelisted: true, // Tolak request jika ada properti tak dikenal
+      transform: true, // Otomatis transform payload ke instance DTO
+    }),
+  );
 
   // Tambahkan konfigurasi lain jika perlu (misal: CORS, prefix global)
   // app.enableCors();
