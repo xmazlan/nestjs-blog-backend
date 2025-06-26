@@ -9,15 +9,35 @@ import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
 import { PostsController } from './posts/posts.controller';
 import { PostsService } from './posts/posts.service';
+import { CategoriesService } from './categories/categories.service';
+import { CategoriesController } from './categories/categories.controller';
+import { CategoriesModule } from './categories/categories.module';
+import { TagsService } from './tags/tags.service';
+import { TagsController } from './tags/tags.controller';
+import { TagsModule } from './tags/tags.module';
 
 @Module({
   imports: [
     PrismaModule,
     AuthModule,
     UsersModule,
-    PostsModule
+    PostsModule,
+    CategoriesModule,
+    TagsModule,
   ],
-  controllers: [AppController, PostsController],
-  providers: [AppService, PrismaService, UsersService, PostsService],
+  controllers: [
+    AppController,
+    PostsController,
+    CategoriesController,
+    TagsController,
+  ],
+  providers: [
+    AppService,
+    PrismaService,
+    UsersService,
+    PostsService,
+    CategoriesService,
+    TagsService,
+  ],
 })
 export class AppModule {}

@@ -1,0 +1,1853 @@
+{
+	"info": {
+		"_postman_id": "38e050d3-1196-4486-8da1-6337de37d261",
+		"name": "xBlog Backend API (NestJS)",
+		"description": "Koleksi Postman Otomatis untuk menguji API Backend Blog. Endpoint /users/me sekarang memerlukan autentikasi.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12875036"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Daftar nama depan dan belakang Indonesia",
+									"const firstNames = [\"Budi\", \"Ani\", \"Joko\", \"Siti\", \"Eka\", \"Putu\", \"Ahmad\"];",
+									"const lastNames = [\"Wijaya\", \"Kusuma\", \"Lestari\", \"Santoso\", \"Putra\", \"Dewi\", \"Hadi\", \"Susilo\", \"Pratama\", \"Wulandari\", \"Mazlan\"]; // Tambahkan daftar nama belakang di sini",
+									"",
+									"// Pilih nama depan dan belakang secara acak",
+									"const randomFirstName = firstNames[Math.floor(Math.random() * firstNames.length)];",
+									"const randomLastName = lastNames[Math.floor(Math.random() * lastNames.length)];",
+									"",
+									"// Buat konstanta baru berisi nama belakang dalam format lowercase",
+									"const randomLastNameLower = randomLastName.toLowerCase();",
+									"",
+									"// Tetapkan variabel koleksi Postman",
+									"// Username: \"testuser_\" + nama belakang lowercase",
+									"pm.collectionVariables.set(\"randomUsername\", `test_user_${randomLastNameLower}`);",
+									"",
+									"// Email: \"test_\" + nama belakang lowercase + \"@example.com\"",
+									"pm.collectionVariables.set(\"randomEmail\", `test_${randomLastNameLower}@nest.js`);",
+									"",
+									"// Nama Lengkap: Nama Depan + Nama Belakang (kapitalisasi asli)",
+									"pm.collectionVariables.set(\"randomName\", `${randomFirstName} ${randomLastName}`);",
+									"",
+									"// (Opsional) Anda bisa menambahkan log untuk melihat hasilnya di Postman Console",
+									"console.log(\"Generated Username:\", pm.collectionVariables.get(\"randomUsername\"));",
+									"console.log(\"Generated Email:\", pm.collectionVariables.get(\"randomEmail\"));",
+									"console.log(\"Generated Name:\", pm.collectionVariables.get(\"randomName\"));",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 201 Created",
+									"pm.test(\"Status code is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Periksa struktur response dasar",
+									"pm.test(\"Response has required fields\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('statusCode', 201);",
+									"    pm.expect(jsonData).to.have.property('message', 'Registrasi berhasil, Anda otomatis login.');",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    // Periksa keberadaan user dan accessToken dalam data",
+									"    pm.expect(jsonData.data).to.have.property('user');",
+									"    pm.expect(jsonData.data).to.have.property('accessToken');",
+									"    pm.expect(jsonData.data.accessToken).to.be.a('string');",
+									"    // Periksa properti di dalam user",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    pm.expect(jsonData.data).to.have.property('username');",
+									"    pm.expect(jsonData.data).to.have.property('email');",
+									"    pm.expect(jsonData.data).to.have.property('name'); // Verifikasi field name ada",
+									"    pm.expect(jsonData.data.user).to.not.have.property('password'); // Pastikan password tidak ada",
+									"});",
+									"",
+									"// Simpan ID user yang baru dibuat",
+									"pm.test(\"Save created user ID\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    // PERBAIKAN: Ambil ID dari data.user.id",
+									"    if (jsonData.data && jsonData.data.user && jsonData.data.user.id) {",
+									"        pm.collectionVariables.set(\"createdUserId\", jsonData.data.user.id);",
+									"        console.log(`User ID ${jsonData.data.user.id} saved to createdUserId`);",
+									"    } else {",
+									"        console.error('Could not find user ID (data.user.id) in response to save.');",
+									"    }",
+									"});",
+									"",
+									"// Simpan juga token yang baru dibuat (auto-login)",
+									"pm.test(\"Save auth token from registration\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.accessToken) {",
+									"        pm.collectionVariables.set(\"authToken\", jsonData.data.accessToken);",
+									"        console.log(`Auth token from registration saved.`);",
+									"    } else {",
+									"        console.error('Could not find accessToken in registration response to save.');",
+									"    }",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{randomUsername}}\",\n    \"email\": \"{{randomEmail}}\",\n    \"name\": \"{{randomName}}\", \n    \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Mendaftarkan pengguna baru dengan username, email, nama acak, dan password."
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains access token\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('accessToken'); ",
+									"    pm.expect(jsonData.data.accessToken).to.be.a('string');",
+									"    // pm.expect(jsonData.data).to.have.property('id');",
+									"});",
+									"",
+									"pm.test(\"Save auth token to collection variable\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.accessToken) {",
+									"        pm.collectionVariables.set(\"authToken\", jsonData.data.accessToken);",
+									"        console.log(\"Auth token saved.\");",
+									"    } else {",
+									"        console.error(\"Could not find accessToken in response to save.\");",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"identifier\": \"{{randomUsername}}\",\n    \"password\": \"password123\"\n    \n    // \"identifier\": \"admin\",\n    // \"password\": \"password\"\n\n    // \"identifier\": \"author@example.com\",\n    // \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login pengguna via identifier (username/email) untuk mendapatkan token JWT. Simpan token ke variabel 'authToken'."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoint terkait Autentikasi dan Otorisasi"
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get All Users",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response data is an array\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						},
+						"description": "Mendapatkan daftar semua pengguna. Idealnya endpoint ini hanya bisa diakses oleh Admin dan membutuhkan token."
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test status 200",
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Test struktur respons",
+									"pm.test(\"Response has correct profile structure\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    pm.expect(jsonData.data).to.have.property('username');",
+									"    pm.expect(jsonData.data).to.have.property('email');",
+									"    pm.expect(jsonData.data).to.have.property('name');",
+									"    pm.expect(jsonData.data).to.not.have.property('password');",
+									"",
+									"    if (pm.response.code === 200 && jsonData?.data?.name) {",
+									"        pm.collectionVariables.set(\"loggedName\", jsonData.data.name);",
+									"        pm.execution.setNextRequest(\"Posts - Create New Post\")",
+									"    } else {",
+									"        console.warn(\"Tidak valid atau tidak ada nama.\");",
+									"        pm.execution.setNextRequest(null);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"me"
+							]
+						},
+						"description": "Mendapatkan detail profil pengguna yang sedang login (membutuhkan token autentikasi)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get My ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    // Endpoint ini sekarang HARUS mengembalikan 200 jika token valid",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has correct profile structure\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    pm.expect(jsonData.data).to.have.property('username');",
+									"    pm.expect(jsonData.data).to.have.property('email');",
+									"    pm.expect(jsonData.data).to.have.property('name');",
+									"    pm.expect(jsonData.data).to.not.have.property('password');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/my-id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"my-id"
+							]
+						},
+						"description": "Mendapatkan detail profil pengguna yang sedang login (membutuhkan token autentikasi)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User By ID",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Pre-request Script for \"Get User By ID\" (Versi Terbaru)",
+									"",
+									"// Dapatkan ID dari variabel koleksi atau gunakan '1' sebagai default",
+									"const userIdToGet = pm.collectionVariables.get(\"createdUserId\") || \"1\";",
+									"console.log(`Setting userIdToFetch variable to: ${userIdToGet}`);",
+									"// Set variabel baru yang akan digunakan di URL path",
+									"pm.collectionVariables.set(\"userIdToFetch\", userIdToGet);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has correct user structure\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    pm.expect(jsonData.data).to.have.property('username');",
+									"    pm.expect(jsonData.data).to.have.property('email');",
+									"    pm.expect(jsonData.data).to.have.property('name');",
+									"    pm.expect(jsonData.data).to.not.have.property('password');",
+									"});",
+									"",
+									"// Verifikasi ID sesuai dengan yang diminta (jika menggunakan createdUserId)",
+									"const requestedId = pm.request.url.variables.get(\"id\");",
+									"const createdUserId = pm.collectionVariables.get(\"createdUserId\");",
+									"if (createdUserId && requestedId === createdUserId) {",
+									"    pm.test(\"User ID matches the created user ID\", function() {",
+									"        const jsonData = pm.response.json();",
+									"        pm.expect(jsonData.data.id).to.eql(parseInt(requestedId));",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{createdUserId}}"
+								}
+							]
+						},
+						"description": "Mendapatkan detail pengguna berdasarkan ID. ID diambil dari variabel 'createdUserId' jika ada."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoint terkait manajemen Pengguna"
+		},
+		{
+			"name": "Posts",
+			"item": [
+				{
+					"name": "Create New Post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 201 Created",
+									"pm.test(\"Status code is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Periksa struktur response dasar",
+									"pm.test(\"Response has required post fields\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('title');",
+									"    pm.expect(jsonData).to.have.property('slug');",
+									"    pm.expect(jsonData).to.have.property('content');",
+									"    pm.expect(jsonData).to.have.property('authorId'); // Pastikan authorId ada",
+									"    pm.expect(jsonData).to.have.property('published'); // Sesuaikan dengan respons Anda",
+									"});",
+									"",
+									"// Simpan ID post yang baru dibuat",
+									"pm.test(\"Save created post ID and slug\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData && jsonData.id && jsonData.slug) {",
+									"        pm.collectionVariables.set(\"createdPostId\", jsonData.id);",
+									"        console.log(`Post ID ${jsonData.id} saved to createdPostId`);",
+									"",
+									"        pm.collectionVariables.set(\"createdPostSlug\", jsonData.slug);",
+									"        console.log(`Slug: \\\"${jsonData.slug}\\\" saved to createdPostSlug`);",
+									"",
+									"        pm.collectionVariables.set(\"highest_post_id\", jsonData.id);",
+									"        console.log(\"Highest post ID diatur kembali sesuai id Postingan ini: \"+ jsonData.id);",
+									"    } else {",
+									"        if (!jsonData.id) {",
+									"            console.error('Couldn\\'t find ID in response to save');",
+									"        } else if (!jsonData.slug) {",
+									"            console.error('Couldn\\'t find slug in response to save');",
+									"        } else {",
+									"            console.error ('Something was wrong, double check post-response');",
+									"        }",
+									"    }",
+									"",
+									"    // if (jsonData && jsonData.slug) {",
+									"    //     pm.collectionVariables.set(\"createdPostSlug\", jsonData.slug);",
+									"    //     console.log(`Slug: \\\"${jsonData.slug}\\\" saved to createdPostSlug`);",
+									"    // } else {",
+									"    //     console.error('Could not find post slug in response to save.');",
+									"    // }    ",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.sendRequest({",
+									"    url: pm.environment.get(\"base_url\") + \"/users/me\",",
+									"    method: 'GET',",
+									"    header: {",
+									"        \"Authorization\": \"Bearer \" + pm.collectionVariables.get(\"authToken\"),",
+									"        \"Content-Type\": \"application/json\"",
+									"    }",
+									"}, function (errUser, responseUser) {",
+									"    if (errUser) {",
+									"        console.error(\"Error saat mengirim request ke /users/me:\", errUser);",
+									"        return;",
+									"    }",
+									"",
+									"    if (responseUser.code === 200) {",
+									"        const responseBodyUser = responseUser.json();",
+									"        if (responseBodyUser && responseBodyUser.data && typeof responseBodyUser.data.name !== 'undefined') {",
+									"            const loggedName = responseBodyUser.data.name;",
+									"            pm.collectionVariables.set(\"loggedName\", loggedName);",
+									"            console.log(\"Nama pengguna '\" + loggedName + \"' berhasil diambil dan disimpan sebagai variabel koleksi 'loggedName'.\");",
+									"",
+									"            // --- MULAI REQUEST KEDUA (GET POSTS) SETELAH DAPAT NAMA PENGGUNA ---",
+									"            pm.sendRequest({",
+									"                url: pm.environment.get(\"base_url\") + \"/posts\",",
+									"                method: 'GET'",
+									"            }, function (errPosts, responsePosts) {",
+									"                if (errPosts) {",
+									"                    console.error(\"Error saat mengambil posts:\", errPosts);",
+									"                    return;",
+									"                }",
+									"",
+									"                if (responsePosts.code === 200) {",
+									"                    const responseBodyPosts = responsePosts.json();",
+									"                    const postsArray = responseBodyPosts.data;",
+									"",
+									"                    let nextId;",
+									"                    let willPublishOrNot = Math.random() < 0.5;",
+									"",
+									"                    if (Array.isArray(postsArray) && postsArray.length > 0) {",
+									"                        const highest_id = Math.max(...postsArray.map(item => item.id));",
+									"                        pm.collectionVariables.set(\"highest_post_id\", highest_id.toString());",
+									"                        console.log(\"Highest post ID berhasil diatur ke: \" + highest_id);",
+									"                        nextId = highest_id + 1;",
+									"                    } else {",
+									"                        console.log(\"Tidak ada postingan ditemukan. Diasumsikan ini adalah postingan pertama.\");",
+									"                        pm.collectionVariables.set(\"highest_post_id\", \"0\");",
+									"                        nextId = 1;",
+									"                    }",
+									"",
+									"                    const currentLoggedName = pm.collectionVariables.get(\"loggedName\");",
+									"",
+									"                    pm.request.body.mode = \"raw\";",
+									"                    pm.request.body.options.raw.language = \"json\";",
+									"                    pm.request.body.raw = JSON.stringify({",
+									"                        \"title\": \"Postingan ke-\" + nextId + \" oleh \" + currentLoggedName,",
+									"                        \"content\": \"Ini adalah konten dari postingan \" + nextId + \" yang dibuat menggunakan Postman dan NestJS oleh \" + currentLoggedName + \".\",",
+									"                        \"imagePath\": \"/uploads/images/sample-post-\" + nextId + \".jpg\",",
+									"                        \"published\": willPublishOrNot",
+									"                    });",
+									"                    console.log(\"Request body untuk postingan baru telah disiapkan dengan ID: \" + nextId + \" oleh \" + currentLoggedName);",
+									"                    console.log(\"Request body mentah:\", pm.request.body.raw);",
+									"",
+									"                    if (willPublishOrNot) {",
+									"                        console.log(\"Postingan akan dipublish\");",
+									"                    } else {",
+									"                        console.log(\"Postingan akan disimpan sebagai draft\");",
+									"                    }",
+									"                } else {",
+									"                    console.error(\"Gagal mendapatkan postingan. Status code: \" + responsePosts.code);",
+									"                    console.log(\"Response text posts:\", responsePosts.text());",
+									"                }",
+									"            });",
+									"            // --- SELESAI REQUEST KEDUA ---",
+									"",
+									"        } else {",
+									"            console.warn(\"Struktur respons dari /users/me tidak seperti yang diharapkan atau nama tidak ditemukan.\");",
+									"            console.log(\"Response body /users/me:\", JSON.stringify(responseBodyUser, null, 2));",
+									"            pm.collectionVariables.unset(\"loggedName\");",
+									"        }",
+									"    } else {",
+									"        console.error(\"Gagal mendapatkan profil pengguna. Status code: \" + responseUser.code);",
+									"        console.log(\"Response text /users/me:\", responseUser.text());",
+									"        pm.collectionVariables.unset(\"loggedName\");",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Postingan ke-{{createdPostId}} by Regular body\",\n    \"content\": \"Ini adalah konten dari postingan {{createdPostId}} yang dibuat menggunakan Postman dan NestJS oleh {{randomName}}\",\n    \"imagePath\": \"/uploads/images/sample-post-{{createdPostId}}.jpg\",\n    \"published\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/posts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"posts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Posts",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// get highest posts id then insert to variable",
+									"pm.test('Check if the response body contains the correct data', function () {",
+									"    const jsonData = pm.response.json();",
+									"    const data = jsonData.data;",
+									"    const highestId = Math.max(...data.map(item => item.id));",
+									"    pm.collectionVariables.set(\"highest_post_id\", highestId);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/posts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"posts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Post by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 200 OK",
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Periksa struktur response dasar",
+									"pm.test(\"Response has required post fields\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('title');",
+									"    pm.expect(jsonData).to.have.property('slug');",
+									"    pm.expect(jsonData).to.have.property('content');",
+									"    // Verifikasi ID jika menggunakan variabel",
+									"    if (pm.collectionVariables.get(\"createdPostId\")) {",
+									"        pm.expect(jsonData.id).to.eql(parseInt(pm.collectionVariables.get(\"createdPostId\")));",
+									"    }",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/posts/{{createdPostId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"posts",
+								"{{createdPostId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Post by Slug",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 201 Created",
+									"pm.test(\"Status code is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Periksa struktur response dasar",
+									"pm.test(\"Response has required post fields\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('title');",
+									"    pm.expect(jsonData).to.have.property('slug');",
+									"    pm.expect(jsonData).to.have.property('content');",
+									"    pm.expect(jsonData).to.have.property('author.name'); // Pastikan authorId ada",
+									"    pm.expect(jsonData).to.have.property('published'); // Sesuaikan dengan respons Anda",
+									"});",
+									"",
+									"// Simpan ID post yang baru dibuat",
+									"pm.test(\"Save created post ID and slug\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData && jsonData.title) {",
+									"        console.log(`Postingan ditemukan dengan judul \\'${jsonData.title}\\' yang ditulis oleh \\'${jsonData.author.name}\\'`)",
+									"    } else {",
+									"        console.error('Postingan tidak ditemukan');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/posts/slug/{{createdPostSlug}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"posts",
+								"slug",
+								"{{createdPostSlug}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 200 OK",
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Periksa apakah judul telah diperbarui (sesuaikan dengan field yang Anda update)",
+									"pm.test(\"Post title has been updated\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    // Ganti \"Judul Postingan Setelah Diperbarui\" dengan nilai yang Anda kirim di body",
+									"    pm.expect(jsonData.title).to.eql(\"Judul Postingan Setelah Diperbarui\");",
+									"",
+									"    if (jsonData && jsonData.slug) {",
+									"        pm.collectionVariables.set(\"createdPostSlug\", jsonData.slug);",
+									"        console.log(`createdPostSlug diperbarui menjadi ${jsonData.slug}`);",
+									"    }",
+									"});",
+									"",
+									"// Periksa apakah status publikasi telah diperbarui",
+									"pm.test(\"Post published status has been updated\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.published).to.eql(true); // Sesuaikan dengan nilai yang Anda kirim",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Judul Postingan Setelah Diperbarui\",\n    \"published\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/posts/{{createdPostId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"posts",
+								"{{createdPostId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 204 No Content",
+									"pm.test(\"Status code is 204 No Content\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});",
+									"",
+									"// Opsional: Hapus variabel ID post setelah berhasil dihapus",
+									"pm.test(\"Clear createdPostId and createdPostSlug after deletion\", function() {",
+									"    if (pm.response.code === 204) {",
+									"        pm.collectionVariables.unset(\"createdPostId\");",
+									"        pm.collectionVariables.unset(\"createdPostSlug\");",
+									"        console.log(\"createdPostId and createdPostSlug cleared.\");",
+									"    }",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/posts/{{createdPostId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"posts",
+								"{{createdPostId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoint terkait manajemen Postingan Blog"
+		},
+		{
+			"name": "Categories",
+			"item": [
+				{
+					"name": "Create New Category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 201 Created",
+									"pm.test(\"Status code is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Periksa struktur response dasar",
+									"pm.test(\"Response has required category fields\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('name', \"Teknologi Terbaru\"); // Sesuaikan dengan nama yang Anda kirim",
+									"    pm.expect(jsonData).to.have.property('slug');",
+									"});",
+									"",
+									"// Simpan ID dan slug kategori yang baru dibuat",
+									"pm.test(\"Save created category ID and slug\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData && jsonData.id) {",
+									"        pm.collectionVariables.set(\"createdCategoryId\", jsonData.id);",
+									"        console.log(`Category ID ${jsonData.id} saved to createdCategoryId`);",
+									"    }",
+									"    if (jsonData && jsonData.slug) {",
+									"        pm.collectionVariables.set(\"createdCategorySlug\", jsonData.slug);",
+									"        console.log(`Category Slug ${jsonData.slug} saved to createdCategorySlug`);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Teknologi Terbaru Lagi\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/categories",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Categories",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 200 OK",
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Periksa struktur response (data dan meta)",
+									"pm.test(\"Response structure is correct (data and meta)\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data').that.is.an('array');",
+									"    pm.expect(jsonData).to.have.property('meta').that.is.an('object');",
+									"});",
+									"",
+									"// Periksa field dalam meta",
+									"pm.test(\"Meta object has pagination fields\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.meta).to.have.all.keys('totalItems', 'itemsPerPage', 'currentPage', 'totalPages');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Teknologi Terbaru\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/categories?page=1&limit=10&search=Berita&orderBy=desc",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": "Berita"
+								},
+								{
+									"key": "orderBy",
+									"value": "desc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Category by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 200 OK",
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Periksa apakah ID kategori sesuai",
+									"pm.test(\"Category ID matches requested ID\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    const requestedId = pm.collectionVariables.get(\"createdCategoryId\");",
+									"    if (requestedId) {",
+									"        pm.expect(jsonData.id).to.eql(parseInt(requestedId));",
+									"    }",
+									"    pm.expect(jsonData).to.have.property('name');",
+									"    pm.expect(jsonData).to.have.property('slug');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Teknologi Terbaru\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/categories/{{createdCategoryId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories",
+								"{{createdCategoryId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Category by Slug",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 200 OK",
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Periksa apakah slug kategori sesuai",
+									"pm.test(\"Category slug matches requested slug\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    const requestedSlug = pm.collectionVariables.get(\"createdCategorySlug\");",
+									"    if (requestedSlug) {",
+									"        pm.expect(jsonData.slug).to.eql(requestedSlug);",
+									"    }",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('name');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Teknologi Terbaru Lagi\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/categories/slug/{{createdCategorySlug}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories",
+								"slug",
+								"{{createdCategorySlug}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 200 OK",
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Periksa field yang diupdate",
+									"pm.test(\"Category details are updated\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.name).to.eql(\"Teknologi Update\"); // Sesuaikan dengan body",
+									"    pm.expect(jsonData.slug).to.eql(\"teknologi-terkini-update\"); // Sesuaikan dengan body",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Teknologi Hehe\",\n    \"slug\": \"pertahankan-slug\" // opsional\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/categories/{{createdCategoryId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories",
+								"{{createdCategoryId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 204 No Content",
+									"pm.test(\"Status code is 204 No Content\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});",
+									"",
+									"// Opsional: Hapus variabel setelah berhasil dihapus",
+									"pm.test(\"Clear category variables after deletion\", function() {",
+									"    if (pm.response.code === 204) {",
+									"        pm.collectionVariables.unset(\"createdCategoryId\");",
+									"        pm.collectionVariables.unset(\"createdCategorySlug\");",
+									"        console.log(\"createdCategoryId and createdCategorySlug cleared.\");",
+									"    }",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/categories/{{createdCategoryId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories",
+								"{{createdCategoryId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoint untuk manajemen Kategori Blog"
+		},
+		{
+			"name": "Tags",
+			"item": [
+				{
+					"name": "Create New Tag",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 201 Created",
+									"pm.test(\"Status code is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Periksa struktur response dasar",
+									"pm.test(\"Response has required tag fields\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    // pm.expect(jsonData).to.have.property('name', \"NestJS Framework\"); // Sesuaikan",
+									"    pm.expect(jsonData).to.have.property('slug');",
+									"});",
+									"",
+									"// Simpan ID dan slug tag yang baru dibuat",
+									"pm.test(\"Save created tag ID and slug\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData && jsonData.id) {",
+									"        pm.collectionVariables.set(\"createdTagId\", jsonData.id);",
+									"        console.log(`Tag ID ${jsonData.id} saved to createdTagId`);",
+									"    }",
+									"    if (jsonData && jsonData.slug) {",
+									"        pm.collectionVariables.set(\"createdTagSlug\", jsonData.slug);",
+									"        console.log(`Tag Slug ${jsonData.slug} saved to createdTagSlug`);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"NestJS Framework Lagi Haha\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tags",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tags"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tags",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 200 OK",
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Periksa struktur response (data dan meta)",
+									"pm.test(\"Response structure is correct (data and meta)\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data').that.is.an('array');",
+									"    pm.expect(jsonData).to.have.property('meta').that.is.an('object');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tags?page=1&limit=10&search=&orderBy=asc",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tags"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "orderBy",
+									"value": "asc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Tag by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 200 OK",
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Periksa apakah ID tag sesuai",
+									"pm.test(\"Tag ID matches requested ID\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    const requestedId = pm.collectionVariables.get(\"createdTagId\");",
+									"    if (requestedId) {",
+									"        pm.expect(jsonData.id).to.eql(parseInt(requestedId));",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tags/{{createdTagId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tags",
+								"{{createdTagId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Tag by Slug",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 200 OK",
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Periksa apakah slug tag sesuai",
+									"pm.test(\"Tag slug matches requested slug\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    const requestedSlug = pm.collectionVariables.get(\"createdTagSlug\");",
+									"    if (requestedSlug) {",
+									"        pm.expect(jsonData.slug).to.eql(requestedSlug);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tags/slug/{{createdTagSlug}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tags",
+								"slug",
+								"{{createdTagSlug}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Tag",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 200 OK",
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Periksa field yang diupdate",
+									"pm.test(\"Tag details are updated\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.name).to.eql(\"NestJS Advanced\"); // Sesuaikan",
+									"    pm.expect(jsonData.slug).to.eql(\"nestjs-pro\"); // Sesuaikan",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"NestJS Advanced\",\n    \"slug\": \"nestjs-pro\" //opsional\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tags/{{createdTagId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tags",
+								"{{createdTagId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Tag",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Periksa status code 204 No Content",
+									"pm.test(\"Status code is 204 No Content\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});",
+									"",
+									"// Opsional: Hapus variabel setelah berhasil dihapus",
+									"pm.test(\"Clear tag variables after deletion\", function() {",
+									"    if (pm.response.code === 204) {",
+									"        pm.collectionVariables.unset(\"createdTagId\");",
+									"        pm.collectionVariables.unset(\"createdTagSlug\");",
+									"        console.log(\"createdTagId and createdTagSlug cleared.\");",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"NestJS Advanced\",\n    \"slug\": \"nestjs-pro\" //opsional\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tags/{{createdTagId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tags",
+								"{{createdTagId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoint untuk manajemen Tag Blog"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"// console.clear();",
+					"console.log('====================================================================');",
+					"console.log(new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }));"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "randomUsername",
+			"value": ""
+		},
+		{
+			"key": "randomEmail",
+			"value": ""
+		},
+		{
+			"key": "randomName",
+			"value": ""
+		},
+		{
+			"key": "createdUserId",
+			"value": ""
+		},
+		{
+			"key": "authToken",
+			"value": ""
+		},
+		{
+			"key": "createdPostId",
+			"value": ""
+		},
+		{
+			"key": "highest_post_id",
+			"value": ""
+		},
+		{
+			"key": "createdPostSlug",
+			"value": ""
+		},
+		{
+			"key": "loggedName",
+			"value": ""
+		},
+		{
+			"key": "createdCategoryId",
+			"value": ""
+		},
+		{
+			"key": "createdCategorySlug",
+			"value": ""
+		},
+		{
+			"key": "createdTagId",
+			"value": ""
+		},
+		{
+			"key": "createdTagSlug",
+			"value": ""
+		}
+	]
+}

@@ -6,7 +6,12 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UsersService, UserWithRoles, FullUserWithRoles, SecureUser } from '../users/users.service'; // Import tipe user, termasuk SecureUser
+import {
+  UsersService,
+  UserWithRoles,
+  FullUserWithRoles,
+  SecureUser,
+} from '../users/users.service'; // Import tipe user, termasuk SecureUser
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { Prisma, User } from '@prisma/client';
@@ -40,7 +45,10 @@ export class AuthService {
    * @param user Objek pengguna (minimal memiliki id dan username).
    * @returns Payload JWT.
    */
-  private _createJwtPayload(user: { id: number; username: string }): JwtPayload {
+  private _createJwtPayload(user: {
+    id: number;
+    username: string;
+  }): JwtPayload {
     return {
       sub: user.id,
       username: user.username,
@@ -56,14 +64,16 @@ export class AuthService {
     return this.jwtService.signAsync(payload);
   }
 
-
   /**
    * Mendaftarkan pengguna baru dan langsung menghasilkan token login serta data pengguna.
    * @param registerAuthDto Data registrasi pengguna.
    * @returns Object berisi data pengguna baru (tanpa password) dan access token.
    * @throws ConflictException, InternalServerErrorException
    */
-  async register(registerAuthDto: RegisterAuthDto): Promise<{ user: SecureUser; accessToken: string }> { // Ubah return type
+  async register(
+    registerAuthDto: RegisterAuthDto,
+  ): Promise<{ user: SecureUser; accessToken: string }> {
+    // Ubah return type
     const { username, email, name, password } = registerAuthDto;
     const hashedPassword = await this.hashPassword(password);
 
@@ -81,7 +91,6 @@ export class AuthService {
         },
         // Tidak perlu select spesifik di sini karena kita akan proses manual
       });
-
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
@@ -134,13 +143,17 @@ export class AuthService {
     }
 
     if (!user) {
-      console.log(`Login attempt failed: Identifier '${identifier}' not found.`);
+      console.log(
+        `Login attempt failed: Identifier '${identifier}' not found.`,
+      );
       throw new UnauthorizedException('Kredensial tidak valid.');
     }
 
     const isPasswordMatching = await bcrypt.compare(password, user.password);
     if (!isPasswordMatching) {
-      console.log(`Login attempt failed: Incorrect password for identifier '${identifier}'.`);
+      console.log(
+        `Login attempt failed: Incorrect password for identifier '${identifier}'.`,
+      );
       throw new UnauthorizedException('Kredensial tidak valid.');
     }
 
@@ -153,14 +166,18 @@ export class AuthService {
   }
 
   // ... (validate tetap sama) ...
-  async validate(payload: JwtPayload): Promise<UserWithRoles> { // Kembalikan tipe UserWithRoles
+  async validate(payload: JwtPayload): Promise<UserWithRoles> {
+    // Kembalikan tipe UserWithRoles
     console.log(`Validating JWT payload for user ID: ${payload.sub}`);
     const user = await this.usersService.findOneById(payload.sub); // findOneById sudah tidak return password by default
     if (!user) {
-      console.error(`JWT validation failed: User with ID ${payload.sub} not found.`);
-      throw new UnauthorizedException('Token tidak valid atau pengguna tidak ditemukan.');
+      console.error(
+        `JWT validation failed: User with ID ${payload.sub} not found.`,
+      );
+      throw new UnauthorizedException(
+        'Token tidak valid atau pengguna tidak ditemukan.',
+      );
     }
     return user as UserWithRoles; // Pastikan tipenya sesuai
   }
-
 }

@@ -25,7 +25,7 @@ export class PostsService {
     title: string,
     currentId?: number,
   ): Promise<string> {
-    let slug = title
+    const slug = title
       .toLowerCase()
       .replace(/\s+/g, '-') // Ganti spasi dengan strip
       .replace(/[^\w-]+/g, ''); // Hapus karakter non-alfanumerik kecuali strip
@@ -301,7 +301,8 @@ export class PostsService {
         (tagId) => !currentTagIds.includes(tagId),
       );
 
-      const tagOperations: Prisma.PostsTagsUpdateManyWithoutPostNestedInput = {};
+      const tagOperations: Prisma.PostsTagsUpdateManyWithoutPostNestedInput =
+        {};
       if (tagsToDisconnect.length > 0) {
         tagOperations.deleteMany = tagsToDisconnect.map((tagId) => ({
           tagId,
@@ -321,7 +322,9 @@ export class PostsService {
         where: { id },
         data: postUpdateData,
         include: {
-          author: { select: { id: true, name: true, email: true, username: true } },
+          author: {
+            select: { id: true, name: true, email: true, username: true },
+          },
           category: true,
           tags: { include: { tag: true } },
         },
